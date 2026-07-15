@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* ────────────────────────────────────────────────────────────────────────────
+   COURTQUEST — "Court Paint" design system
+   Court black, chalk white, CourtQuest red. Court-line geometry as structure.
+──────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Color */
+  --color-court: #0a0a0b;        /* page black */
+  --color-carbon: #131316;       /* raised surface */
+  --color-graphite: #1c1c21;     /* higher surface / borders on dark */
+  --color-chalk: #fafaf8;        /* white */
+  --color-chalk-dim: #a3a3ab;    /* muted text on dark */
+  --color-ink: #101014;          /* text on light */
+  --color-ink-dim: #55555e;      /* muted text on light */
+  --color-cq: #e22028;           /* CourtQuest red */
+  --color-cq-deep: #a31217;      /* pressed red */
+  --color-cq-bright: #ff3b42;    /* red on dark backgrounds */
+  --color-win: #22c55e;
+  --color-line: rgba(250, 250, 248, 0.14);
+
+  /* Type */
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-chivo-mono), ui-monospace, monospace;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-pulse-live: pulse-live 1.6s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+:root { color-scheme: dark; }
+
+/* Smooth scrolling only for same-page anchor jumps; route changes snap
+   instantly so navigation never feels like being dragged up the page. */
+html:has(:target) { scroll-behavior: smooth; }
+
+body {
+  background: var(--color-court);
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--color-cq); color: var(--color-chalk); }
+
+/* ── Display type: expanded athletic caps ─────────────────────────────────── */
+.display {
+  font-weight: 800;
+  font-stretch: 125%;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
+.display-wide {
+  font-weight: 700;
+  font-stretch: 125%;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* Eyebrow label — mono, letterspaced, like a scorebug caption */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+}
+
+/* Tabular numerals everywhere data lives */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ── Court-line signature ─────────────────────────────────────────────────────
+   The baseline: a double rule, like the painted lines of a court. */
+.baseline {
+  position: relative;
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 10px;
+}
+.baseline::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -6px;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.45;
+}
+
+/* Kitchen tick — small court-corner mark used as a bullet */
+.kitchen-tick {
+  width: 13px; height: 13px;
+  border-left: 3px solid var(--color-cq);
+  border-bottom: 3px solid var(--color-cq);
+  display: inline-block;
+}
+
+/* Court grid texture for dark panels */
+.court-grid {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 71px, var(--color-line) 71px, var(--color-line) 72px),
+    repeating-linear-gradient(90deg, transparent, transparent 71px, var(--color-line) 71px, var(--color-line) 72px);
+}
+
+/* Light ("away kit") sections */
+.paper {
+  background: var(--color-chalk);
+  color: var(--color-ink);
+  color-scheme: light;
+}
+
+/* ── Utility ──────────────────────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+:focus-visible {
+  outline: 2px solid var(--color-cq-bright);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(:target) { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
