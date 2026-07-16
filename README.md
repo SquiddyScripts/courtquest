@@ -62,7 +62,16 @@ Two ways into `/admin` (also reachable via the small ⚿ icon in the footer):
 
 ## Deploy
 
-Vercel: import the repo, add the two env vars from `.env.local`, done.
+Live at **https://courtquest.vercel.app** (Vercel project `courtquest`,
+account amaaninva-8822). Ship an update from this folder with:
+
+```bash
+npx vercel deploy --prod
+```
+
+Or connect the GitHub repo (SquiddyScripts/courtquest) in the Vercel
+dashboard so every push deploys automatically. The two `NEXT_PUBLIC_*` env
+vars are already set in Vercel production.
 Supabase project: `courtquest` (`mvkknpjpbdltqkjlcfzf`, us-east-1).
 
 ## Verified
