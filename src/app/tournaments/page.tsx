@@ -94,6 +94,7 @@ export default function TournamentsPage() {
       .from("tournaments")
       .select("*")
       .neq("status", "draft")
+      .eq("hidden", false)
       .order("starts_at", { ascending: false })
       .then(({ data }) => setTournaments((data as Tournament[]) ?? []));
   }, []);

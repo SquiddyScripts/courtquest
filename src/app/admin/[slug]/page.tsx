@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useState } from "react";
-import { Check, ChevronRight, Minus, Plus, Search } from "lucide-react";
+import { Check, ChevronRight, Eye, EyeOff, Minus, Plus, Search, Trash2 } from "lucide-react";
 import { adminWrite, supabase } from "@/lib/supabase";
 import { useAdmin } from "@/lib/useAdmin";
 import { useLiveTournament } from "@/lib/useLive";
@@ -97,6 +98,7 @@ function Stepper({
 
 export default function AdminTournamentPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const router = useRouter();
   const { me, checked } = useAdmin();
   const pin = me?.cred ?? null;
   const { tournament, teams, matches, refresh } = useLiveTournament(slug);
@@ -246,12 +248,26 @@ export default function AdminTournamentPage({ params }: { params: Promise<{ slug
           )}
 
           {activeTab === "setup" && (
-            <SettingsForm
-              key={tournament.id + tournament.status}
-              tournament={tournament}
-              busy={busy}
-              onSave={async (patch) => { await act("tournament_update", { id: tournament.id, patch }); await refresh(); }}
-            />
+            <>
+              <SettingsForm
+                key={tournament.id + tournament.status}
+                tournament={tournament}
+                busy={busy}
+                onSave={async (patch) => { await act("tournament_update", { id: tournament.id, patch }); await refresh(); }}
+              />
+              <VisibilityAndDelete
+                tournament={tournament}
+                busy={busy}
+                onToggleHidden={async () => {
+                  await act("tournament_update", { id: tournament.id, patch: { hidden: !tournament.hidden } });
+                  await refresh();
+                }}
+                onDelete={async () => {
+                  await act("tournament_delete", { id: tournament.id, confirm_slug: tournament.slug });
+                  router.push("/admin");
+                }}
+              />
+            </>
           )}
         </>
       )}
@@ -670,6 +686,106 @@ function RegistrationsTab({
           <div className="mt-4 grid gap-2 opacity-70">{processed.map((r) => row(r, false))}</div>
         </details>
       )}
+    </div>
+  );
+}
+
+/* ── Visibility + delete ─────────────────────────────────────────────────── */
+function VisibilityAndDelete({
+  tournament, busy, onToggleHidden, onDelete,
+}: {
+  tournament: Tournament;
+  busy: boolean;
+  onToggleHidden: () => Promise<void>;
+  onDelete: () => Promise<void>;
+}) {
+  const [confirm, setConfirm] = useState("");
+  const [open, setOpen] = useState(false);
+  const matches = confirm.trim() === tournament.slug;
+
+  return (
+    <div className="mt-14 max-w-3xl space-y-3">
+      {/* hide */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border border-line bg-carbon p-5">
+        <div className="flex items-start gap-3">
+          {tournament.hidden
+            ? <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-chalk-dim" aria-hidden />
+            : <Eye className="mt-0.5 h-4 w-4 shrink-0 text-chalk-dim" aria-hidden />}
+          <div>
+            <p className="font-bold uppercase tracking-wide text-chalk">
+              {tournament.hidden ? "Hidden from the website" : "Listed on the website"}
+            </p>
+            <p className="mt-1 max-w-md text-sm text-chalk-dim">
+              {tournament.hidden
+                ? "It doesn't appear on the tournaments page, the ticker, or the nav. Anyone with the direct link can still open it, so you can share it with the team."
+                : "It appears on the tournaments page like any other event."}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onToggleHidden}
+          disabled={busy}
+          className="eyebrow shrink-0 border border-line px-4 py-2.5 text-chalk-dim transition-colors hover:border-chalk/40 hover:text-chalk disabled:opacity-50"
+        >
+          {tournament.hidden ? "Show on website" : "Hide from website"}
+        </button>
+      </div>
+
+      {/* delete */}
+      <div className="border border-line bg-carbon p-5">
+        {!open ? (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Trash2 className="mt-0.5 h-4 w-4 shrink-0 text-chalk-dim" aria-hidden />
+              <div>
+                <p className="font-bold uppercase tracking-wide text-chalk">Delete this tournament</p>
+                <p className="mt-1 max-w-md text-sm text-chalk-dim">
+                  Erases the event and every team, match, and score with it. If you
+                  only want it off the site, hide it instead.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setOpen(true)}
+              className="eyebrow shrink-0 border border-line px-4 py-2.5 text-chalk-dim transition-colors hover:border-cq hover:text-cq-bright"
+            >
+              Delete
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p className="font-bold uppercase tracking-wide text-cq-bright">
+              This cannot be undone
+            </p>
+            <p className="mt-2 max-w-lg text-sm text-chalk-dim">
+              Type <span className="font-mono font-bold text-chalk">{tournament.slug}</span> to
+              permanently delete this tournament and all of its data.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <input
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder={tournament.slug}
+                autoComplete="off"
+                className={`${field} max-w-xs font-mono`}
+              />
+              <button
+                onClick={onDelete}
+                disabled={!matches || busy}
+                className="bg-cq px-5 py-3 text-sm font-bold uppercase tracking-wide text-chalk transition-colors hover:bg-cq-bright disabled:opacity-30"
+              >
+                {busy ? "Deleting…" : "Delete forever"}
+              </button>
+              <button
+                onClick={() => { setOpen(false); setConfirm(""); }}
+                className="eyebrow border border-line px-4 py-3 text-chalk-dim hover:text-chalk"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

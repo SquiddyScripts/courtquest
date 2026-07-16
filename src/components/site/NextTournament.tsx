@@ -16,6 +16,7 @@ export function NextTournament() {
       .from("tournaments")
       .select("*")
       .in("status", ["live", "registration"])
+      .eq("hidden", false)
       .order("starts_at", { ascending: true })
       .limit(1)
       .maybeSingle()

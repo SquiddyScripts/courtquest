@@ -21,6 +21,8 @@ export interface Tournament {
   registration_open: boolean;
   format: "singles" | "doubles";
   participants: number | null;
+  /** Not listed anywhere public. Direct links still work. */
+  hidden: boolean;
   created_at: string;
 }
 

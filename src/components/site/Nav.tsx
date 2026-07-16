@@ -34,6 +34,7 @@ export function Nav() {
       .from("tournaments")
       .select("slug")
       .eq("status", "live")
+      .eq("hidden", false)
       .limit(1)
       .then(({ data }) => setLiveSlug(data?.[0]?.slug ?? null));
   }, [pathname]);

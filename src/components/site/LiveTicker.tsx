@@ -22,7 +22,9 @@ export function LiveTicker() {
 
     async function load() {
       const { data: t } = await supabase
-        .from("tournaments").select("*").eq("status", "live").limit(1).maybeSingle();
+        .from("tournaments").select("*")
+        .eq("status", "live").eq("hidden", false)
+        .limit(1).maybeSingle();
       if (!t) return;
       setTournament(t as Tournament);
 

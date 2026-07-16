@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { KeyRound, ShieldCheck, Users } from "lucide-react";
+import { EyeOff, KeyRound, ShieldCheck, Users } from "lucide-react";
 import { adminWrite, supabase } from "@/lib/supabase";
 import { useAdmin, type AdminIdentity } from "@/lib/useAdmin";
+import { LiveDot } from "@/components/ui";
 import type { Member, Tournament } from "@/lib/types";
 
 const field =
@@ -364,12 +365,22 @@ export default function AdminHome() {
     }
   }
 
-  const STATUS_TONE: Record<string, string> = {
-    live: "bg-cq text-chalk",
-    registration: "bg-chalk text-court",
-    draft: "border border-line text-chalk-dim",
-    completed: "border border-line text-chalk-dim",
-  };
+  /* Tournaments grouped the way a season actually reads: what's happening
+     now, what's opening, what's still a draft, then past events by year. */
+  const groups: { title: string; note?: string; items: Tournament[] }[] = [
+    { title: "Happening now", items: tournaments.filter((t) => t.status === "live") },
+    { title: "Open for sign-ups", items: tournaments.filter((t) => t.status === "registration") },
+    { title: "Drafts", note: "Hidden from the public site", items: tournaments.filter((t) => t.status === "draft") },
+  ];
+  const past = tournaments.filter((t) => t.status === "completed");
+  const years = [...new Set(past.map((t) => (t.starts_at ? new Date(t.starts_at).getFullYear() : 0)))]
+    .sort((a, b) => b - a);
+  for (const y of years) {
+    groups.push({
+      title: y === 0 ? "Past (no date)" : `Past · ${y}`,
+      items: past.filter((t) => (t.starts_at ? new Date(t.starts_at).getFullYear() : 0) === y),
+    });
+  }
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-28 sm:px-6 sm:pt-32">
@@ -440,26 +451,49 @@ export default function AdminHome() {
         </form>
       )}
 
-      <div className="grid gap-3">
-        {tournaments.map((t) => (
-          <Link
-            key={t.id}
-            href={`/admin/${t.slug}`}
-            className="group flex flex-wrap items-center justify-between gap-4 border border-line bg-carbon p-5 transition-all hover:border-chalk/40"
-          >
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="font-bold uppercase tracking-wide text-chalk">{t.name}</h2>
-                <span className={`eyebrow px-2 py-0.5 ${STATUS_TONE[t.status]}`}>{t.status}</span>
-              </div>
-              <p className="eyebrow mt-1.5 text-chalk-dim/70">
-                {t.starts_at ? new Date(t.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date TBA"}
-                {" · "}{t.format}{" · "}Ref code: <span className="font-bold text-chalk-dim">{t.ref_code}</span>
-              </p>
+      <div className="space-y-10">
+        {groups.filter((g) => g.items.length > 0).map((g) => (
+          <section key={g.title}>
+            <div className="mb-4 flex items-baseline gap-3 border-b border-line pb-2">
+              <p className="eyebrow text-chalk">{g.title}</p>
+              <span className="tnum font-mono text-xs text-chalk-dim/60">{g.items.length}</span>
+              {g.note && <span className="eyebrow ml-auto text-chalk-dim/50">{g.note}</span>}
             </div>
-            <span className="eyebrow text-chalk-dim transition-colors group-hover:text-cq-bright">Manage →</span>
-          </Link>
+            <div className="grid gap-3">
+              {g.items.map((t) => (
+                <Link
+                  key={t.id}
+                  href={`/admin/${t.slug}`}
+                  className="group flex flex-wrap items-center justify-between gap-4 border border-line bg-carbon p-5 transition-all hover:border-chalk/40"
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h2 className="font-bold uppercase tracking-wide text-chalk">{t.name}</h2>
+                      {t.status === "live" && (
+                        <span className="eyebrow flex items-center gap-2 bg-cq px-2 py-0.5 text-chalk"><LiveDot /> Live</span>
+                      )}
+                      {t.hidden && (
+                        <span className="eyebrow flex items-center gap-1.5 border border-line px-2 py-0.5 text-chalk-dim">
+                          <EyeOff className="h-3 w-3" /> Hidden
+                        </span>
+                      )}
+                    </div>
+                    <p className="eyebrow mt-1.5 text-chalk-dim/70">
+                      {t.starts_at ? new Date(t.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date TBA"}
+                      {" · "}{t.format}{" · "}Ref code: <span className="font-bold text-chalk-dim">{t.ref_code}</span>
+                    </p>
+                  </div>
+                  <span className="eyebrow text-chalk-dim transition-colors group-hover:text-cq-bright">Manage →</span>
+                </Link>
+              ))}
+            </div>
+          </section>
         ))}
+        {tournaments.length === 0 && (
+          <p className="border border-dashed border-line px-6 py-12 text-center text-sm text-chalk-dim">
+            No tournaments yet. Create your first one above.
+          </p>
+        )}
       </div>
 
       {me.role === "owner" && <TeamSection me={me} />}
