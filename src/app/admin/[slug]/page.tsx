@@ -462,6 +462,30 @@ function RunTab({
         )}
       </section>
 
+      {/* manual matchup: late arrivals, make-up games, whatever the day needs */}
+      <section className="border border-line bg-carbon p-5 sm:p-6">
+        <p className="eyebrow text-cq-bright">Manual matchup</p>
+        <p className="mt-2 max-w-lg text-sm text-chalk-dim">
+          Pair any two teams for an extra qualification game. Handy for players
+          who arrive after the schedule was generated.
+        </p>
+        <ManualMatchup
+          teams={teams.filter((t) => !t.withdrawn && t.checked_in)}
+          courts={tournament.courts}
+          busy={busy}
+          onCreate={async (teamA, teamB, court) => {
+            const nextCode = Math.max(0, ...matches.map((m) => m.code)) + 1;
+            const maxRound = Math.max(1, ...qual.map((m) => m.round));
+            await act("match_insert_bulk", {
+              matches: [{
+                tournament_id: tournament.id, code: nextCode, stage: "qualification",
+                round: maxRound, slot: null, court, team_a: teamA, team_b: teamB,
+              }],
+            });
+          }}
+        />
+      </section>
+
       {/* danger zone */}
       <details className="border border-line bg-carbon p-5">
         <summary className="eyebrow cursor-pointer text-chalk-dim hover:text-cq-bright">Regenerate qualification (danger)</summary>
@@ -650,6 +674,57 @@ function RegistrationsTab({
   );
 }
 
+/* ── Manual matchup builder ──────────────────────────────────────────────── */
+function ManualMatchup({
+  teams, courts, busy, onCreate,
+}: {
+  teams: Team[];
+  courts: number;
+  busy: boolean;
+  onCreate: (teamA: string, teamB: string, court: number | null) => Promise<void>;
+}) {
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  const [court, setCourt] = useState("");
+  const [made, setMade] = useState(false);
+  const sel = "border border-line bg-court px-3 py-3 text-sm text-chalk focus:border-chalk/40 focus:outline-none";
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-3">
+      <select value={a} onChange={(e) => { setA(e.target.value); setMade(false); }} className={`${sel} min-w-44 flex-1`} aria-label="Team A">
+        <option value="">Team A…</option>
+        {teams.filter((t) => t.id !== b).map((t) => (
+          <option key={t.id} value={t.id}>{t.number} · {teamPlayers(t)}</option>
+        ))}
+      </select>
+      <span className="eyebrow text-chalk-dim">vs</span>
+      <select value={b} onChange={(e) => { setB(e.target.value); setMade(false); }} className={`${sel} min-w-44 flex-1`} aria-label="Team B">
+        <option value="">Team B…</option>
+        {teams.filter((t) => t.id !== a).map((t) => (
+          <option key={t.id} value={t.id}>{t.number} · {teamPlayers(t)}</option>
+        ))}
+      </select>
+      <select value={court} onChange={(e) => setCourt(e.target.value)} className={sel} aria-label="Court">
+        <option value="">Queue (no court)</option>
+        {Array.from({ length: courts }, (_, i) => i + 1).map((c) => (
+          <option key={c} value={c}>Court {c}</option>
+        ))}
+      </select>
+      <button
+        onClick={async () => {
+          await onCreate(a, b, court ? Number(court) : null);
+          setA(""); setB(""); setCourt(""); setMade(true);
+        }}
+        disabled={busy || !a || !b}
+        className="bg-cq px-5 py-3 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright disabled:opacity-40"
+      >
+        Create matchup
+      </button>
+      {made && <span className="eyebrow text-win">Created ✓</span>}
+    </div>
+  );
+}
+
 /* ── Generation form with the time estimate ──────────────────────────────── */
 function GenForm({
   teams, courts, defaultRounds, busy, onGenerate, label,
@@ -657,8 +732,11 @@ function GenForm({
   teams: number; courts: number; defaultRounds: number; busy: boolean;
   onGenerate: (rounds: number) => void; label: string;
 }) {
-  const [rounds, setRounds] = useState(defaultRounds);
-  const matchCount = Math.floor((teams * rounds) / 2);
+  // Kept as a string so the field can be cleared while typing a new number.
+  const [rounds, setRounds] = useState(String(defaultRounds));
+  const parsed = Math.min(12, Math.floor(Number(rounds)));
+  const valid = Number.isFinite(parsed) && parsed >= 1;
+  const matchCount = valid ? Math.floor((teams * parsed) / 2) : 0;
   const est = estimateMinutes(matchCount, courts);
   return (
     <div className="mt-5 flex flex-wrap items-end justify-center gap-4">
@@ -666,19 +744,19 @@ function GenForm({
         <span className="eyebrow mb-2 block text-chalk-dim">Games per team</span>
         <input
           type="number" min={1} max={12} value={rounds}
-          onChange={(e) => setRounds(Math.max(1, Number(e.target.value)))}
+          onChange={(e) => setRounds(e.target.value)}
           className="w-28 border border-line bg-court px-4 py-3 font-mono text-lg font-bold text-chalk focus:border-chalk/40 focus:outline-none"
         />
       </label>
       <div className="pb-1 text-left">
         <p className="eyebrow text-chalk-dim">Estimate</p>
         <p className="tnum mt-1 font-mono text-sm text-chalk">
-          {matchCount} matches · ~{formatDuration(est)} on {courts} courts
+          {valid ? `${matchCount} matches · ~${formatDuration(est)} on ${courts} courts` : "Enter games per team"}
         </p>
       </div>
       <button
-        onClick={() => onGenerate(rounds)}
-        disabled={busy || teams < 2}
+        onClick={() => onGenerate(parsed)}
+        disabled={busy || teams < 2 || !valid}
         className="bg-cq px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright disabled:opacity-40"
       >
         {busy ? "Working…" : label}

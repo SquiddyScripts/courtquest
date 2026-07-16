@@ -41,7 +41,11 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
   }, [slug]);
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
-  const queue = useMemo(() => nextUpQueue(matches), [matches]);
+  // Call-up queue: only matches no court has claimed yet.
+  const queue = useMemo(
+    () => nextUpQueue(matches).filter((m) => m.court == null),
+    [matches]
+  );
 
   /** The match a ref on this court should be dealing with right now. */
   const currentFor = (c: number): Match | null =>
@@ -61,9 +65,11 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
     if (!tournament || !code) return;
     setBusy(true);
     try {
+      // Calling a match claims it: it goes live on this court immediately,
+      // so no other court can pull the same matchup.
       await refWrite(tournament.id, code, "match_update", {
         id: m.id,
-        patch: { court: c },
+        patch: { court: c, status: "ongoing", started_at: new Date().toISOString() },
       });
     } finally {
       setBusy(false);

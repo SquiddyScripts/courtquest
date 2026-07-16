@@ -77,6 +77,8 @@ export interface GeneratedMatch {
   court: number | null;
   team_a: string | null;
   team_b: string | null;
+  status?: "upcoming" | "completed";
+  note?: string;
 }
 
 export function generateQualification(
@@ -126,7 +128,9 @@ export function generateQualification(
 
 /* ── Elimination generator ────────────────────────────────────────────────────
    Seeds top 8 into the classic bracket (1v8, 4v5, 3v6, 2v7) so that
-   1-seed and 2-seed can only meet in the final. Creates QF/SF/F shells. */
+   1-seed and 2-seed can only meet in the final. With fewer than 8
+   qualifiers, byes resolve immediately: the lone team is advanced to the
+   next round and the empty match is recorded as a completed bye. */
 export function generateElimination(
   tournament: Tournament,
   standings: Standing[],
@@ -134,8 +138,6 @@ export function generateElimination(
 ): GeneratedMatch[] {
   const q = standings.filter((s) => s.qualified).slice(0, QUALIFIER_COUNT);
   if (q.length < 2) return [];
-  // Pad to a power-of-two-friendly structure (always 8 per the rulebook;
-  // byes fill in if fewer teams finished qualification).
   const seed = (i: number) => q[i]?.team.id ?? null;
   const qfPairs: [string | null, string | null][] = [
     [seed(0), seed(7)],
@@ -145,10 +147,13 @@ export function generateElimination(
   ];
   let code = startCode;
   const out: GeneratedMatch[] = [];
+  let courtNo = 1;
   qfPairs.forEach(([a, b], i) => {
+    const playable = !!a && !!b;
     out.push({
       tournament_id: tournament.id, code: code++, stage: "quarterfinal",
-      round: 1, slot: i + 1, court: i < tournament.courts ? i + 1 : null,
+      round: 1, slot: i + 1,
+      court: playable && courtNo <= tournament.courts ? courtNo++ : null,
       team_a: a, team_b: b,
     });
   });
@@ -162,6 +167,45 @@ export function generateElimination(
     tournament_id: tournament.id, code: code++, stage: "final",
     round: 1, slot: 1, court: null, team_a: null, team_b: null,
   });
+
+  // Resolve byes stage by stage. A side of a match is "permanently empty"
+  // only when nothing can ever fill it: seeded empty at the quarterfinals,
+  // or fed by a match that itself resolved as an empty bye. Sides fed by a
+  // playable match are just TBD, not byes.
+  const nextOf: Partial<Record<Stage, Stage>> = { quarterfinal: "semifinal", semifinal: "final" };
+  const prevOf: Partial<Record<Stage, Stage>> = { semifinal: "quarterfinal", final: "semifinal" };
+  const feeder = (m: GeneratedMatch, side: "a" | "b") =>
+    out.find(
+      (x) => x.stage === prevOf[m.stage] && x.slot === (side === "a" ? m.slot! * 2 - 1 : m.slot! * 2)
+    );
+  const emptyBye = (m: GeneratedMatch | undefined) =>
+    !!m && m.note === "bye" && !m.team_a && !m.team_b;
+  const sideIsDead = (m: GeneratedMatch, side: "a" | "b") => {
+    if (side === "a" ? m.team_a : m.team_b) return false;
+    const f = feeder(m, side);
+    return m.stage === "quarterfinal" ? true : emptyBye(f);
+  };
+
+  for (const stage of ["quarterfinal", "semifinal"] as const) {
+    for (const m of out.filter((x) => x.stage === stage)) {
+      const deadA = sideIsDead(m, "a");
+      const deadB = sideIsDead(m, "b");
+      if (!deadA && !deadB) continue; // playable, or waiting on real winners
+      m.status = "completed";
+      m.note = "bye";
+      m.court = null;
+      const advancing = deadA ? m.team_b : m.team_a;
+      if (advancing) {
+        const next = out.find(
+          (x) => x.stage === nextOf[stage] && x.slot === Math.ceil(m.slot! / 2)
+        );
+        if (next) {
+          if (m.slot! % 2 === 1) next.team_a = advancing;
+          else next.team_b = advancing;
+        }
+      }
+    }
+  }
   return out;
 }
 

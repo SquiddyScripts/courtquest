@@ -22,7 +22,8 @@ function Slot({
   const score = side === "a" ? match?.score_a : match?.score_b;
   const other = side === "a" ? match?.score_b : match?.score_a;
   const done = match?.status === "completed";
-  const winner = done && score! > other!;
+  const isBye = match?.note === "bye";
+  const winner = done && (isBye ? !!team : score! > other!);
   const live = match?.status === "ongoing";
 
   return (
@@ -35,12 +36,12 @@ function Slot({
         <span className="tnum w-5 shrink-0 text-right font-mono text-[11px] text-chalk-dim/60">
           {team?.number ?? ""}
         </span>
-        <span className={`truncate text-[13px] ${winner ? "font-bold" : "font-medium"}`}>
-          {team ? teamPlayers(team) : "TBD"}
+        <span className={`truncate text-[13px] ${winner ? "font-bold" : "font-medium"} ${!team && isBye ? "italic text-chalk-dim/50" : ""}`}>
+          {team ? teamPlayers(team) : isBye ? "Bye" : "TBD"}
         </span>
       </div>
       <span className={`tnum shrink-0 font-mono text-sm ${winner ? "font-bold text-cq-bright" : live ? "text-chalk" : ""}`}>
-        {match && (match.status !== "upcoming" || done) ? score : ""}
+        {match && !isBye && (match.status !== "upcoming" || done) ? score : ""}
       </span>
     </div>
   );

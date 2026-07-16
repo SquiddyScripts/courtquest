@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Minus } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Coins, Minus } from "lucide-react";
 import { refWrite } from "@/lib/supabase";
 import { isGameOver, STAGE_LABEL, teamPlayers } from "@/lib/logic";
 import type { Match, Team, Tournament } from "@/lib/types";
@@ -33,6 +33,7 @@ export function ScoreConsole({ tournament, match, teams, code, onExit, embedded 
   const [more, setMore] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [flipping, setFlipping] = useState(false);
   const [error, setError] = useState("");
   const syncing = useRef(0);
 
@@ -88,6 +89,31 @@ export function ScoreConsole({ tournament, match, teams, code, onExit, embedded 
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Swap which team sits on which side of the scoreboard. */
+  async function swapSides() {
+    const [sa, sb] = [scoreA, scoreB];
+    setScoreA(sb);
+    setScoreB(sa);
+    await write("match_update", {
+      patch: {
+        team_a: match.team_b,
+        team_b: match.team_a,
+        score_a: sb,
+        score_b: sa,
+        serving: match.serving === "a" ? "b" : match.serving === "b" ? "a" : null,
+      },
+    });
+  }
+
+  function flipCoin() {
+    setFlipping(true);
+    setTimeout(async () => {
+      const result = Math.random() < 0.5 ? "heads" : "tails";
+      await write("match_update", { patch: { coin_flip: result } });
+      setFlipping(false);
+    }, 900);
   }
 
   async function withdraw(side: "a" | "b") {
@@ -156,6 +182,29 @@ export function ScoreConsole({ tournament, match, teams, code, onExit, embedded 
           #{match.code} <span className="text-chalk-dim">· {STAGE_LABEL[match.stage]} · first to {target}{match.stage !== "qualification" ? ", win by 2" : ""}</span>
           {match.court != null && <span className="text-chalk-dim"> · Court {match.court}</span>}
         </p>
+      </div>
+
+      {/* quick tools: match the board to the court, settle who serves */}
+      <div className="mb-3 flex items-center justify-center gap-2">
+        <button
+          onClick={swapSides}
+          disabled={match.status === "completed"}
+          className="eyebrow flex items-center gap-2 border border-line px-3.5 py-2.5 text-chalk-dim transition-colors hover:border-chalk/40 hover:text-chalk disabled:opacity-40"
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5" /> Swap sides
+        </button>
+        <button
+          onClick={flipCoin}
+          disabled={flipping}
+          className={`eyebrow flex items-center gap-2 border px-3.5 py-2.5 transition-colors ${
+            match.coin_flip
+              ? "border-chalk/40 text-chalk"
+              : "border-line text-chalk-dim hover:border-chalk/40 hover:text-chalk"
+          }`}
+        >
+          <Coins className={`h-3.5 w-3.5 ${flipping ? "animate-spin" : ""}`} />
+          {flipping ? "Flipping…" : match.coin_flip ? match.coin_flip.toUpperCase() : "Coin flip"}
+        </button>
       </div>
 
       {/* the scoreboard */}
