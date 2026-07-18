@@ -114,10 +114,15 @@ function LiveDay({ slug, myTeams }: { slug: string; myTeams: Team[] }) {
   const myScore = (m: (typeof mine)[number]): [number, number] =>
     m.team_a && myIds.has(m.team_a) ? [m.score_a, m.score_b] : [m.score_b, m.score_a];
 
-  const playing = mine.find((m) => m.status === "ongoing");
-  const called = mine.find((m) => m.status === "upcoming" && m.court != null && m.note !== "bye");
+  // A ref "calling" a match flips it to ongoing (even at 0-0). That — not a
+  // manager pre-assigning a court to an upcoming match — is what tells a player
+  // to walk over. So "called" vs "playing" is purely about whether the game has
+  // started scoring; a court number on an upcoming match means nothing here.
+  const active = mine.find((m) => m.status === "ongoing");
+  const called = active && active.score_a === 0 && active.score_b === 0 ? active : null;
+  const playing = active && !called ? active : null;
   const waiting = mine
-    .filter((m) => m.status === "upcoming" && m.court == null && m.team_a && m.team_b && m.note !== "bye")
+    .filter((m) => m.status === "upcoming" && m.team_a && m.team_b && m.note !== "bye")
     .sort((a, b) => a.code - b.code)[0];
   const done = mine.filter((m) => m.status === "completed" && m.note !== "bye");
 
