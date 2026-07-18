@@ -41,11 +41,9 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
   }, [slug]);
 
   const teamMap = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
-  // Call-up queue: only matches no court has claimed yet.
-  const queue = useMemo(
-    () => nextUpQueue(matches).filter((m) => m.court == null),
-    [matches]
-  );
+  // Call-up queue: the true next matches, in order. A penciled-in court on an
+  // upcoming match does NOT hide it — only started matches are off the table.
+  const queue = useMemo(() => nextUpQueue(matches), [matches]);
 
   /** The match a ref on this court should be dealing with right now. */
   const currentFor = (c: number): Match | null =>
@@ -66,12 +64,12 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
     setBusy(true);
     try {
       // Calling a match makes it active on this court right away, even at 0-0
-      // (the ref has the players, or is waiting on them). Once it's ongoing its
-      // teams count as busy, so the queue immediately shows the real next match.
-      await refWrite(tournament.id, code, "match_update", {
-        id: m.id,
-        patch: { court: c, status: "ongoing", started_at: new Date().toISOString() },
-      });
+      // (the ref has the players, or is waiting on them). The claim is atomic:
+      // it succeeds only while the match hasn't started, so if two courts call
+      // the same match in the same instant, exactly one wins and the other's
+      // view just moves on to the real next match via realtime. A court the
+      // manager penciled in does not block the call.
+      await refWrite(tournament.id, code, "match_claim", { id: m.id, court: c });
     } finally {
       setBusy(false);
     }
