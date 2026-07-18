@@ -1,7 +1,7 @@
 # CourtQuest Admin & Tournament Guide
 
 This guide is for teammates testing or running CourtQuest. It covers getting an
-admin account, the admin desk, and running a tournament from check-in to champion.
+admin account, the admin desk, and running a tournament from start to finish.
 
 
 - Live site: https://courtquest.vercel.app
