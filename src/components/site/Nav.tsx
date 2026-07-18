@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { X } from "lucide-react";
+import { UserRound, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { usePlayer } from "@/lib/usePlayer";
 import { LiveDot } from "@/components/ui";
 import logo from "@/photos/logo.png";
 
@@ -30,10 +31,20 @@ function Wordmark({ onClick }: { onClick?: () => void }) {
   );
 }
 
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+}
+
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [liveSlug, setLiveSlug] = useState<string | null>(null);
+  const { player } = usePlayer();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -103,19 +114,50 @@ export function Nav() {
             >
               Donate
             </Link>
+            {/* Player presence: initials circle when signed in, quiet icon when not */}
+            {player ? (
+              <Link
+                href="/me"
+                aria-label={`${player.name} — your dashboard`}
+                title={`${player.name} — your dashboard`}
+                className="tnum flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-cq bg-cq/15 font-mono text-sm font-bold text-chalk transition-all hover:bg-cq hover:-translate-y-0.5"
+              >
+                {initialsOf(player.name)}
+              </Link>
+            ) : (
+              <Link
+                href="/me"
+                aria-label="Player sign in"
+                title="Player sign in"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line text-chalk-dim transition-all hover:border-chalk/50 hover:text-chalk"
+              >
+                <UserRound className="h-[18px] w-[18px]" />
+              </Link>
+            )}
           </div>
 
-          {/* Mobile trigger */}
-          <button
-            className="relative z-[60] flex h-11 w-11 flex-col items-center justify-center gap-[5px] md:hidden"
-            onClick={() => setOpen(!open)}
-            aria-expanded={open}
-            aria-label={open ? "Close menu" : "Open menu"}
-          >
-            <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`} />
-            <span className={`h-[2px] w-6 bg-chalk transition-opacity ${open ? "opacity-0" : ""}`} />
-            <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`} />
-          </button>
+          {/* Mobile: player circle sits next to the hamburger */}
+          <div className="flex items-center gap-2 md:hidden">
+            {player && (
+              <Link
+                href="/me"
+                aria-label={`${player.name} — your dashboard`}
+                className="tnum flex h-9 w-9 items-center justify-center rounded-full border-2 border-cq bg-cq/15 font-mono text-xs font-bold text-chalk"
+              >
+                {initialsOf(player.name)}
+              </Link>
+            )}
+            <button
+              className="relative z-[60] flex h-11 w-11 flex-col items-center justify-center gap-[5px]"
+              onClick={() => setOpen(!open)}
+              aria-expanded={open}
+              aria-label={open ? "Close menu" : "Open menu"}
+            >
+              <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`} />
+              <span className={`h-[2px] w-6 bg-chalk transition-opacity ${open ? "opacity-0" : ""}`} />
+              <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`} />
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -172,6 +214,27 @@ export function Nav() {
               <motion.div initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
                 <Link href="/donate" className="display block py-3 text-4xl text-cq-bright">
                   Donate
+                </Link>
+              </motion.div>
+              <motion.div initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+                <Link href="/me" className="mt-4 flex items-center gap-3 border-t border-line py-5">
+                  {player ? (
+                    <>
+                      <span className="tnum flex h-9 w-9 items-center justify-center rounded-full border-2 border-cq bg-cq/15 font-mono text-xs font-bold text-chalk">
+                        {initialsOf(player.name)}
+                      </span>
+                      <span className="text-sm font-bold uppercase tracking-wider text-chalk">
+                        My dashboard
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <UserRound className="h-5 w-5 text-chalk-dim" aria-hidden />
+                      <span className="text-sm font-bold uppercase tracking-wider text-chalk-dim">
+                        Player sign in
+                      </span>
+                    </>
+                  )}
                 </Link>
               </motion.div>
             </div>
