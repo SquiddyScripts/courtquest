@@ -210,7 +210,25 @@ export default function TournamentPage({ params }: { params: Promise<{ slug: str
                   </span>
                   <div className="min-w-0">
                     <p className={`truncate font-semibold text-chalk ${t.withdrawn ? "line-through" : ""}`}>
-                      {teamPlayers(t)}
+                      {t.p1_id ? (
+                        <Link href={`/players/${t.p1_id}`} className="underline decoration-line underline-offset-4 hover:text-cq-bright">
+                          {t.player1}
+                        </Link>
+                      ) : (
+                        t.player1
+                      )}
+                      {t.player2 && (
+                        <>
+                          {", "}
+                          {t.p2_id ? (
+                            <Link href={`/players/${t.p2_id}`} className="underline decoration-line underline-offset-4 hover:text-cq-bright">
+                              {t.player2}
+                            </Link>
+                          ) : (
+                            t.player2
+                          )}
+                        </>
+                      )}
                     </p>
                     <p className="eyebrow mt-0.5 text-chalk-dim/70">
                       {t.withdrawn ? "Withdrawn" : t.checked_in ? "Checked in" : "Registered"}

@@ -8,6 +8,7 @@ const COLUMNS = [
     links: [
       { href: "/tournaments", label: "Tournaments" },
       { href: "/join", label: "Sign up to play" },
+      { href: "/me", label: "Player dashboard" },
       { href: "/ref", label: "Referee console" },
     ],
   },

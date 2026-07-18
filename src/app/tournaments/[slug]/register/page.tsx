@@ -6,7 +6,7 @@ import { use, useEffect, useState } from "react";
 import { ArrowLeft, BadgeCheck, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { eventMedia } from "@/lib/eventMedia";
-import { RegisterForm } from "@/components/tournament/RegisterForm";
+import { RegisterForm, type RegistrationResult } from "@/components/tournament/RegisterForm";
 import { LiveDot } from "@/components/ui";
 import type { Tournament } from "@/lib/types";
 
@@ -14,7 +14,7 @@ import type { Tournament } from "@/lib/types";
 export default function RegisterPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const [tournament, setTournament] = useState<Tournament | null | undefined>(undefined);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<RegistrationResult | null>(null);
   const media = eventMedia(slug);
 
   useEffect(() => {
@@ -106,11 +106,23 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
                 We&apos;ll email you the details before {tournament.name}. Bring your
                 cash entry fee to check-in on tournament day.
               </p>
+              {done.profile === "created" && (
+                <p className="mx-auto mt-3 max-w-sm border border-line bg-carbon px-4 py-3 text-sm text-chalk">
+                  Your player profile is ready and you&apos;re signed in. Your matches
+                  and stats will track automatically.
+                </p>
+              )}
               <div className="mt-7 flex flex-wrap justify-center gap-3">
-                <Link href={`/tournaments/${slug}`} className="bg-cq px-5 py-3 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright">
-                  View tournament
-                </Link>
-                <button onClick={() => setDone(false)} className="eyebrow border border-line px-4 py-3 text-chalk-dim hover:text-chalk">
+                {done.profile === "created" ? (
+                  <Link href="/me" className="bg-cq px-5 py-3 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright">
+                    Open my dashboard
+                  </Link>
+                ) : (
+                  <Link href={`/tournaments/${slug}`} className="bg-cq px-5 py-3 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright">
+                    View tournament
+                  </Link>
+                )}
+                <button onClick={() => setDone(null)} className="eyebrow border border-line px-4 py-3 text-chalk-dim hover:text-chalk">
                   Register another team
                 </button>
               </div>
@@ -124,7 +136,7 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
                   ? "Sign up your doubles team. We'll collect both players' emails so nobody misses an update."
                   : "Sign up to play. Takes about a minute."}
               </p>
-              <RegisterForm tournament={tournament} onDone={() => setDone(true)} />
+              <RegisterForm tournament={tournament} onDone={setDone} />
             </>
           ) : (
             <div className="border border-line bg-carbon p-8 text-center">

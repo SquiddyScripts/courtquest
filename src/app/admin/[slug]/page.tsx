@@ -648,7 +648,15 @@ function RegistrationsTab({
       {actions ? (
         <button
           onClick={async () => {
-            await act("team_insert", { tournament_id: tournament.id, player1: r.player1, player2: r.player2 });
+            // Emails ride along so the team links to any player profiles.
+            await act("team_insert", {
+              tournament_id: tournament.id,
+              player1: r.player1,
+              player2: r.player2,
+              email: r.email,
+              email2: r.email2,
+              registration_id: r.id,
+            });
             await act("registration_update", { id: r.id, patch: { processed: true } });
             setRegs((prev) => prev.map((x) => x.id === r.id ? { ...x, processed: true } : x));
           }}

@@ -37,7 +37,19 @@ export interface Team {
   paid: boolean;
   withdrawn: boolean;
   seed: number | null;
+  /** Optional links to player profiles (public, harmless ids). */
+  p1_id: string | null;
+  p2_id: string | null;
+  registration_id: string | null;
   created_at: string;
+}
+
+/** A signed-in player (from the optional profile system). */
+export interface PlayerIdentity {
+  id: string;
+  name: string;
+  email: string;
+  token: string;
 }
 
 export interface Match {
