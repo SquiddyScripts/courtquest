@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { LiveDot } from "@/components/ui";
 import logo from "@/photos/logo.png";
@@ -128,11 +129,21 @@ export function Nav() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
+            // Tapping empty space anywhere on the sheet closes it. Links and the
+            // close button still work (navigation/close either way).
+            onClick={() => setOpen(false)}
             className="fixed inset-0 z-[55] flex flex-col bg-court md:hidden"
           >
             {/* menu's own top bar, matching the header height */}
-            <div className="flex h-16 shrink-0 items-center px-4">
+            <div className="flex h-16 shrink-0 items-center justify-between px-4">
               <Wordmark onClick={() => setOpen(false)} />
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+                className="flex h-11 w-11 items-center justify-center text-chalk transition-colors hover:text-cq-bright"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
 
             <div className="flex flex-1 flex-col justify-center gap-1 px-6">

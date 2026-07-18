@@ -49,8 +49,8 @@ export default function HomePage() {
       <Hero />
       <LiveTicker />
 
-      {/* ── Impact stats — clean centered band ────────────────────────────── */}
-      <section className="border-b border-line">
+      {/* ── Impact stats — clean centered band over court-line texture ────── */}
+      <section className="court-grid border-b border-line">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
           <Reveal className="mb-10 text-center">
             <p className="eyebrow text-cq-bright">Student-led · 100% volunteer-run</p>
