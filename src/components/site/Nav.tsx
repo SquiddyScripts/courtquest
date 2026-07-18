@@ -15,6 +15,20 @@ const LINKS = [
   { href: "/join", label: "Get Involved" },
 ];
 
+function Wordmark({ onClick }: { onClick?: () => void }) {
+  return (
+    <Link href="/" onClick={onClick} className="flex items-center gap-3" aria-label="CourtQuest home">
+      <Image src={logo} alt="" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" priority />
+      <span className="leading-none">
+        <span className="display-wide block text-[15px] text-chalk">
+          Court<span className="text-cq-bright">Quest</span>
+        </span>
+        <span className="eyebrow mt-0.5 block text-[9px] text-chalk-dim/70">Est. 2025</span>
+      </span>
+    </Link>
+  );
+}
+
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -49,75 +63,79 @@ export function Nav() {
   }, [open]);
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled || open
-          ? "bg-court/85 backdrop-blur-md border-b border-line"
-          : // Before any scroll: a soft top scrim so links stay readable over
-            // bright areas of the hero photo.
-            "bg-gradient-to-b from-court/90 via-court/55 to-transparent"
-      }`}
-    >
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6">
-        <Link href="/" className="flex items-center gap-3" aria-label="CourtQuest home">
-          <Image src={logo} alt="" width={40} height={40} className="h-9 w-9 sm:h-10 sm:w-10" priority />
-          <span className="display-wide text-[15px] text-chalk">
-            Court<span className="text-cq-bright">Quest</span>
-          </span>
-        </Link>
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-court/85 backdrop-blur-md border-b border-line"
+            : // Before any scroll: a soft top scrim so links stay readable over
+              // bright areas of the hero photo.
+              "bg-gradient-to-b from-court/90 via-court/55 to-transparent"
+        }`}
+      >
+        <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-[72px] sm:px-6">
+          <Wordmark />
 
-        <div className="hidden items-center gap-8 md:flex">
-          {liveSlug && (
+          <div className="hidden items-center gap-8 md:flex">
+            {liveSlug && (
+              <Link
+                href={`/tournaments/${liveSlug}`}
+                className="eyebrow flex items-center gap-2 text-cq-bright hover:text-chalk transition-colors"
+              >
+                <LiveDot /> Live now
+              </Link>
+            )}
+            {LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`text-sm font-semibold uppercase tracking-wider transition-colors ${
+                  pathname.startsWith(l.href) ? "text-chalk" : "text-chalk-dim hover:text-chalk"
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
             <Link
-              href={`/tournaments/${liveSlug}`}
-              className="eyebrow flex items-center gap-2 text-cq-bright hover:text-chalk transition-colors"
+              href="/donate"
+              className="bg-cq px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-chalk transition-all hover:bg-cq-bright hover:-translate-y-0.5"
             >
-              <LiveDot /> Live now
+              Donate
             </Link>
-          )}
-          {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`text-sm font-semibold uppercase tracking-wider transition-colors ${
-                pathname.startsWith(l.href) ? "text-chalk" : "text-chalk-dim hover:text-chalk"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
-          <Link
-            href="/donate"
-            className="bg-cq px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-chalk transition-all hover:bg-cq-bright hover:-translate-y-0.5"
+          </div>
+
+          {/* Mobile trigger */}
+          <button
+            className="relative z-[60] flex h-11 w-11 flex-col items-center justify-center gap-[5px] md:hidden"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
           >
-            Donate
-          </Link>
-        </div>
+            <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`} />
+            <span className={`h-[2px] w-6 bg-chalk transition-opacity ${open ? "opacity-0" : ""}`} />
+            <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`} />
+          </button>
+        </nav>
+      </header>
 
-        {/* Mobile trigger */}
-        <button
-          className="flex h-11 w-11 flex-col items-center justify-center gap-[5px] md:hidden"
-          onClick={() => setOpen(!open)}
-          aria-expanded={open}
-          aria-label={open ? "Close menu" : "Open menu"}
-        >
-          <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`} />
-          <span className={`h-[2px] w-6 bg-chalk transition-opacity ${open ? "opacity-0" : ""}`} />
-          <span className={`h-[2px] w-6 bg-chalk transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`} />
-        </button>
-      </nav>
-
-      {/* Mobile menu — full screen, giant type */}
+      {/* Mobile menu — rendered as a sibling of the header (NOT a child), so it
+          isn't trapped inside the header's backdrop-filter containing block.
+          A fully opaque background means zero bleed-through from the page. */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 top-16 z-40 flex flex-col bg-court/97 backdrop-blur-lg md:hidden"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[55] flex flex-col bg-court md:hidden"
           >
-            <div className="flex flex-1 flex-col justify-center gap-2 px-6">
+            {/* menu's own top bar, matching the header height */}
+            <div className="flex h-16 shrink-0 items-center px-4">
+              <Wordmark onClick={() => setOpen(false)} />
+            </div>
+
+            <div className="flex flex-1 flex-col justify-center gap-1 px-6">
               {liveSlug && (
                 <motion.div initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.05 }}>
                   <Link
@@ -133,23 +151,23 @@ export function Nav() {
                   key={l.href}
                   initial={{ x: -24, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 + i * 0.06 }}
+                  transition={{ delay: 0.08 + i * 0.05 }}
                 >
                   <Link href={l.href} className="display block py-3 text-4xl text-chalk hover:text-cq-bright">
                     {l.label}
                   </Link>
                 </motion.div>
               ))}
-              <motion.div initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+              <motion.div initial={{ x: -24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
                 <Link href="/donate" className="display block py-3 text-4xl text-cq-bright">
                   Donate
                 </Link>
               </motion.div>
             </div>
-            <p className="eyebrow px-6 pb-10 text-chalk-dim">Est. 2025 · 501(c)(3) nonprofit · Northern Virginia</p>
+            <p className="eyebrow px-6 pb-10 text-chalk-dim">501(c)(3) nonprofit · Northern Virginia</p>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }

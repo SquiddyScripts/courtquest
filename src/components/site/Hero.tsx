@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
+import { BadgeCheck } from "lucide-react";
 import { BtnPrimary, BtnGhost } from "@/components/ui";
 import hero from "@/photos/rr-ceremony.jpg";
 
@@ -41,10 +42,12 @@ export function Hero() {
       <div className="absolute inset-0 bg-court/20" aria-hidden />
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-40 sm:px-6 sm:pb-20">
-        <motion.p {...anim(0.15)} className="eyebrow mb-5 flex items-center gap-2.5 text-chalk">
-          <span className="kitchen-tick -translate-y-[2px]" aria-hidden />
-          Student-led 501(c)(3) · Northern Virginia · Est. 2025
-        </motion.p>
+        <motion.div {...anim(0.15)} className="mb-6">
+          <span className="inline-flex items-center gap-2 rounded-full border border-chalk/20 bg-court/40 px-3.5 py-1.5 backdrop-blur-sm">
+            <BadgeCheck className="h-4 w-4 text-cq-bright" aria-hidden />
+            <span className="eyebrow text-chalk">501(c)(3) Certified Nonprofit</span>
+          </span>
+        </motion.div>
 
         <h1 className="display text-[11.5vw] text-chalk sm:text-8xl lg:text-[8.5rem]">
           <motion.span {...anim(0.25)} className="block">
@@ -60,7 +63,7 @@ export function Hero() {
           className="mt-8 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between"
         >
           <p className="max-w-md text-base leading-relaxed text-chalk-dim sm:text-lg">
-            Student-run pickleball tournaments with live brackets, real referees,
+            Student-led pickleball tournaments with live brackets, real referees,
             and every dollar raised going back to local causes.
           </p>
           <div className="flex flex-wrap gap-3">

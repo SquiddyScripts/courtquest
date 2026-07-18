@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { use, useMemo, useState } from "react";
 import { useLiveTournament } from "@/lib/useLive";
 import { computeStandings, teamPlayers } from "@/lib/logic";
@@ -8,9 +9,8 @@ import { eventMedia } from "@/lib/eventMedia";
 import { Bracket } from "@/components/tournament/Bracket";
 import { Standings } from "@/components/tournament/Standings";
 import { MatchCenter } from "@/components/tournament/MatchCenter";
-import { RegisterForm } from "@/components/tournament/RegisterForm";
 import { PhotoGrid } from "@/components/site/PhotoGrid";
-import { LiveDot, Reveal } from "@/components/ui";
+import { LiveDot } from "@/components/ui";
 
 type Tab = "bracket" | "standings" | "matches" | "teams" | "photos";
 
@@ -134,15 +134,23 @@ export default function TournamentPage({ params }: { params: Promise<{ slug: str
         </div>
       </section>
 
-      {/* ── Registration ───────────────────────────────────────────────── */}
+      {/* ── Registration CTA (full form lives on its own linkable page) ──── */}
       {tournament.status === "registration" && tournament.registration_open && (
         <section id="register" className="border-y border-cq/40 bg-cq/[0.06]">
-          <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-            <Reveal>
-              <p className="eyebrow mb-2 text-cq-bright">Registration</p>
-              <h2 className="display mb-8 text-3xl text-chalk">Claim your spot</h2>
-              <RegisterForm tournament={tournament} />
-            </Reveal>
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-5 px-4 py-12 text-center sm:flex-row sm:justify-between sm:text-left sm:px-6">
+            <div>
+              <p className="eyebrow mb-2 text-cq-bright">Registration is open</p>
+              <h2 className="display text-3xl text-chalk">Claim your spot</h2>
+              <p className="mt-2 text-sm text-chalk-dim">
+                {tournament.format === "doubles" ? "Grab a partner and sign up." : "Sign up to play."} Takes about a minute.
+              </p>
+            </div>
+            <Link
+              href={`/tournaments/${slug}/register`}
+              className="shrink-0 bg-cq px-7 py-4 text-sm font-bold uppercase tracking-wide text-chalk transition-all hover:bg-cq-bright hover:-translate-y-0.5 shadow-[0_8px_24px_-8px_rgba(226,32,40,0.55)]"
+            >
+              Register to play
+            </Link>
           </div>
         </section>
       )}

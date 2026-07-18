@@ -642,7 +642,7 @@ function RegistrationsTab({
           {r.volunteer && <span className="eyebrow ml-2 text-win">wants to ref</span>}
         </p>
         <p className="font-mono text-xs text-chalk-dim">
-          {r.email}{r.phone ? ` · ${r.phone}` : ""} · {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          {r.email}{r.email2 ? `, ${r.email2}` : ""}{r.phone ? ` · ${r.phone}` : ""} · {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </p>
       </div>
       {actions ? (

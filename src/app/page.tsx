@@ -7,7 +7,6 @@ import { PhotoGrid } from "@/components/site/PhotoGrid";
 import { BtnGhost, BtnPrimary, Reveal, SectionHead } from "@/components/ui";
 
 import rally1 from "@/photos/rally-1.jpg";
-import serveToss from "@/photos/serve-toss.jpg";
 import doubles from "@/photos/doubles.jpg";
 import trophies from "@/photos/trophies.jpg";
 import winners1 from "@/photos/winners-1.jpg";
@@ -24,7 +23,6 @@ const STATS = [
   { value: "$3,000+", label: "Raised for local causes" },
   { value: "40+", label: "Tournament players" },
   { value: "2", label: "Championships hosted" },
-  { value: "100%", label: "Student-led" },
 ];
 
 const PILLARS = [
@@ -51,17 +49,20 @@ export default function HomePage() {
       <Hero />
       <LiveTicker />
 
-      {/* ── Impact stats — scorebug strip ─────────────────────────────────── */}
-      <section className="court-grid border-b border-line">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 lg:grid-cols-4">
-          {STATS.map((s, i) => (
-            <Reveal key={s.label} delay={i * 0.08} className="border-r border-line last:border-r-0 max-lg:[&:nth-child(2)]:border-r-0 max-lg:[&:nth-child(-n+2)]:border-b max-lg:[&:nth-child(-n+2)]:border-b-[rgba(250,250,248,0.14)]">
-              <div className="px-6 py-10 sm:py-12">
-                <p className="tnum font-mono text-4xl font-bold text-chalk sm:text-5xl">{s.value}</p>
-                <p className="eyebrow mt-3 text-chalk-dim">{s.label}</p>
-              </div>
-            </Reveal>
-          ))}
+      {/* ── Impact stats — clean centered band ────────────────────────────── */}
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+          <Reveal className="mb-10 text-center">
+            <p className="eyebrow text-cq-bright">Student-led · 100% volunteer-run</p>
+          </Reveal>
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-6">
+            {STATS.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.1} className="text-center">
+                <p className="tnum font-mono text-5xl font-bold text-chalk sm:text-6xl">{s.value}</p>
+                <p className="eyebrow mx-auto mt-3 max-w-[10rem] text-chalk-dim">{s.label}</p>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -80,14 +81,13 @@ export default function HomePage() {
         />
         <PhotoGrid
           photos={[
-            { img: serveToss, alt: "Player tossing the ball to serve", label: "Chill N' Dill · Jan 2026", span: "tall" },
-            { img: rally1, alt: "Doubles rally at the net", label: "Chill N' Dill · Jan 2026", span: "wide" },
+            { img: rally1, alt: "Doubles rally at the net", label: "Chill N' Dill · Jan 2026" },
+            { img: winners1, alt: "Winning teams holding trophies", label: "Podium finishers" },
+            { img: rrCourt, alt: "Rally Royale court during play", label: "Rally Royale · Aug 2025" },
             { img: trophies, alt: "Championship trophies lined up courtside", label: "Championship hardware" },
             { img: doubles, alt: "Doubles teams mid-point", label: "Qualification rounds" },
-            { img: rrCourt, alt: "Rally Royale court during play", label: "Rally Royale · Aug 2025" },
-            { img: winners1, alt: "Winning teams holding trophies", label: "Podium finishers", span: "wide" },
-            { img: netDuo, alt: "Two players at the net between points", label: "Between points" },
             { img: podium, alt: "Podium finishers with their awards", label: "Chill N' Dill podium" },
+            { img: netDuo, alt: "Two players at the net between points", label: "Between points" },
             { img: matchFar, alt: "Matches running across the venue", label: "Four courts running" },
           ]}
         />
@@ -210,7 +210,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-court/78" aria-hidden />
         <div className="relative z-10 mx-auto max-w-4xl px-4 py-28 text-center sm:px-6 sm:py-40">
           <Reveal>
-            <p className="eyebrow mb-5 text-cq-bright">Chill N&apos; Dill · Championship point</p>
+            <p className="eyebrow mb-5 text-cq-bright">Join the next tournament</p>
             <h2 className="display text-5xl text-chalk sm:text-7xl">
               Ready to take
               <br />

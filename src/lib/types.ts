@@ -72,6 +72,7 @@ export interface Registration {
   player1: string;
   player2: string | null;
   email: string;
+  email2: string | null;
   phone: string | null;
   volunteer: boolean;
   processed: boolean;

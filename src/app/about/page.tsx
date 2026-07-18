@@ -92,7 +92,7 @@ export default function AboutPage() {
                   that powers it all is built by students too.
                 </p>
               </div>
-              <div className="mt-10 grid grid-cols-3 gap-6 border-t border-ink/15 pt-8">
+              <div className="mt-10 grid grid-cols-3 gap-6 border-t border-ink/15 pt-8 text-center">
                 {[
                   { v: "$3,000+", l: "Raised" },
                   { v: "40+", l: "Players" },
@@ -100,7 +100,7 @@ export default function AboutPage() {
                 ].map((s) => (
                   <div key={s.l}>
                     <p className="tnum font-mono text-3xl font-bold text-cq">{s.v}</p>
-                    <p className="eyebrow mt-2 text-ink-dim">{s.l}</p>
+                    <p className="eyebrow mx-auto mt-2 max-w-[8rem] text-ink-dim">{s.l}</p>
                   </div>
                 ))}
               </div>
@@ -133,6 +133,42 @@ export default function AboutPage() {
               </div>
             </Reveal>
           ))}
+        </div>
+      </section>
+
+      {/* People — the volunteers, referees, and advisors behind it */}
+      <section className="paper">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28">
+          <SectionHead dark={false} eyebrow="The people" title="Powered by volunteers" />
+          <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start">
+            <Reveal>
+              <p className="text-lg leading-relaxed text-ink sm:text-xl">
+                Every CourtQuest tournament runs on the students who show up early
+                and leave late: the <strong>organizers</strong> who plan the day, the{" "}
+                <strong>referees</strong> who call every rally, and the{" "}
+                <strong>scorekeepers</strong> at the desk. None of it is paid, and all
+                of it is theirs.
+              </p>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <div className="space-y-6">
+                <div className="border-t border-ink/15 pt-5">
+                  <p className="eyebrow text-cq">Our volunteers</p>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-dim">
+                    Thank you to the student organizers, referees, and desk crew who
+                    make tournament day possible. You are CourtQuest.
+                  </p>
+                </div>
+                <div className="border-t border-ink/15 pt-5">
+                  <p className="eyebrow text-cq">Our advisors</p>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-dim">
+                    And to the mentors and advisors who guide the nonprofit and keep
+                    us pointed at the mission. Thank you for believing in a student idea.
+                  </p>
+                </div>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
 

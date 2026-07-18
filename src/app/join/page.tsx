@@ -14,7 +14,7 @@ const field =
 const WAYS = [
   {
     n: "Play",
-    body: "Sign up for the next tournament. Singles or doubles, all skill levels welcome. Registration opens on each tournament page.",
+    body: "Grab a partner and sign up for the next doubles tournament. All skill levels welcome. Registration opens on each tournament page.",
   },
   {
     n: "Referee",
