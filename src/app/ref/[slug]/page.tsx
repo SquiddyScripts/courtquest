@@ -29,7 +29,6 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
   const [court, setCourt] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [claimLost, setClaimLost] = useState(false);
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -65,16 +64,14 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
   async function bringToCourt(m: Match, c: number) {
     if (!tournament || !code) return;
     setBusy(true);
-    setClaimLost(false);
     try {
-      // Atomic claim on the server: succeeds only while the match is still
-      // unassigned. Whoever calls first owns it, even at 0-0; a second
-      // referee's claim is rejected instead of overwriting the court.
-      const result = await refWrite(tournament.id, code, "match_claim", {
+      // Calling a match makes it active on this court right away, even at 0-0
+      // (the ref has the players, or is waiting on them). Once it's ongoing its
+      // teams count as busy, so the queue immediately shows the real next match.
+      await refWrite(tournament.id, code, "match_update", {
         id: m.id,
-        court: c,
+        patch: { court: c, status: "ongoing", started_at: new Date().toISOString() },
       });
-      if (!result?.claimed) setClaimLost(true);
     } finally {
       setBusy(false);
     }
@@ -206,11 +203,6 @@ export default function RefConsolePage({ params }: { params: Promise<{ slug: str
       ) : (
         <div className="border border-dashed border-line px-6 py-14 text-center">
           <p className="display text-2xl text-chalk">Court {court} is open</p>
-          {claimLost && (
-            <p className="mx-auto mt-4 max-w-sm border border-cq bg-cq/10 px-4 py-3 font-mono text-sm font-bold uppercase tracking-wider text-cq-bright">
-              Another court just took that match. Here&apos;s the next one:
-            </p>
-          )}
           {queue.length > 0 ? (
             <>
               <p className="mx-auto mt-3 max-w-sm text-sm text-chalk-dim">
