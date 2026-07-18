@@ -2,7 +2,7 @@
 
 This guide is for teammates testing or running CourtQuest. It covers getting an
 admin account, the admin desk, and running a tournament from check-in to champion.
-You don't need to know how the code works to follow it.
+
 
 - Live site: https://courtquest.vercel.app
 - Back to the [project README](../README.md)
