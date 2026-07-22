@@ -390,6 +390,12 @@ export default function AdminHome() {
           <h1 className="display text-4xl sm:text-5xl">Admin</h1>
         </div>
         <div className="flex gap-3">
+          <Link
+            href="/admin/money"
+            className="eyebrow border border-line px-4 py-3 text-chalk-dim hover:text-chalk"
+          >
+            Money &amp; regs
+          </Link>
           <button
             onClick={() => setCreating(!creating)}
             className="bg-cq px-5 py-3 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright"

@@ -634,45 +634,99 @@ function RegistrationsTab({
   const pending = regs.filter((r) => !r.processed);
   const processed = regs.filter((r) => r.processed);
 
-  const row = (r: Registration, actions: boolean) => (
-    <div key={r.id} className="flex flex-wrap items-center gap-3 border border-line bg-carbon px-4 py-3.5">
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-chalk">
-          {r.player1}{r.player2 ? ` & ${r.player2}` : ""}
-          {r.volunteer && <span className="eyebrow ml-2 text-win">wants to ref</span>}
-        </p>
-        <p className="font-mono text-xs text-chalk-dim">
-          {r.email}{r.email2 ? `, ${r.email2}` : ""}{r.phone ? ` · ${r.phone}` : ""} · {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-        </p>
+  const duo = regs.filter((r) => (r.registration_type ?? (r.player2 ? "duo" : "individual")) === "duo").length;
+  const individual = regs.filter((r) => (r.registration_type ?? (r.player2 ? "duo" : "individual")) === "individual").length;
+  const cash = regs.filter((r) => r.payment_method === "cash").length;
+  const online = regs.filter((r) => r.payment_method === "online").length;
+  const paidN = regs.filter((r) => r.paid).length;
+  const expected = regs.reduce((s, r) => s + (r.fee_cents ?? 0), 0);
+  const collected = regs.filter((r) => r.paid).reduce((s, r) => s + (r.fee_cents ?? 0), 0);
+  const money = (c: number) => `$${(c / 100).toFixed(0)}`;
+
+  const row = (r: Registration, actions: boolean) => {
+    const kind = r.registration_type ?? (r.player2 ? "duo" : "individual");
+    const method = r.payment_method ?? "unpaid";
+    return (
+      <div key={r.id} className="flex flex-wrap items-center gap-3 border border-line bg-carbon px-4 py-3.5">
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-chalk">
+            {r.player1}{r.player2 ? ` & ${r.player2}` : ""}
+            {r.volunteer && <span className="eyebrow ml-2 text-win">wants to ref</span>}
+            {r.preferred_partner && !r.player2 && (
+              <span className="eyebrow ml-2 text-chalk-dim">prefers {r.preferred_partner}</span>
+            )}
+          </p>
+          <p className="font-mono text-xs text-chalk-dim">
+            {r.email}{r.email2 ? `, ${r.email2}` : ""}
+            {r.phone ? ` · ${r.phone}` : ""}
+            {" · "}{kind} · {method}{r.fee_cents ? ` · ${money(r.fee_cents)}` : ""}
+            {r.paid ? " · paid" : " · owes"}
+            {" · "}{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </p>
+        </div>
+        {actions ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={async () => {
+                await act("registration_update", {
+                  id: r.id,
+                  patch: { paid: !r.paid, paid_at: !r.paid ? new Date().toISOString() : null },
+                });
+                setRegs((prev) => prev.map((x) => x.id === r.id ? { ...x, paid: !r.paid } : x));
+              }}
+              disabled={busy}
+              className={`eyebrow border px-3 py-2 disabled:opacity-50 ${r.paid ? "border-win/40 text-win" : "border-line text-chalk-dim hover:text-chalk"}`}
+            >
+              {r.paid ? "Paid ✓" : "Mark paid"}
+            </button>
+            <button
+              onClick={async () => {
+                await act("team_insert", {
+                  tournament_id: tournament.id,
+                  player1: r.player1,
+                  player2: r.player2,
+                  email: r.email,
+                  email2: r.email2,
+                  registration_id: r.id,
+                  paid: !!r.paid || r.payment_method === "online",
+                });
+                await act("registration_update", { id: r.id, patch: { processed: true } });
+                setRegs((prev) => prev.map((x) => x.id === r.id ? { ...x, processed: true } : x));
+              }}
+              disabled={busy}
+              className="bg-cq px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright disabled:opacity-50"
+            >
+              Approve as team
+            </button>
+          </div>
+        ) : (
+          <span className="eyebrow text-chalk-dim">Team created ✓</span>
+        )}
       </div>
-      {actions ? (
-        <button
-          onClick={async () => {
-            // Emails ride along so the team links to any player profiles.
-            await act("team_insert", {
-              tournament_id: tournament.id,
-              player1: r.player1,
-              player2: r.player2,
-              email: r.email,
-              email2: r.email2,
-              registration_id: r.id,
-            });
-            await act("registration_update", { id: r.id, patch: { processed: true } });
-            setRegs((prev) => prev.map((x) => x.id === r.id ? { ...x, processed: true } : x));
-          }}
-          disabled={busy}
-          className="bg-cq px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright disabled:opacity-50"
-        >
-          Approve as team
-        </button>
-      ) : (
-        <span className="eyebrow text-chalk-dim">Team created ✓</span>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-10">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { l: "Sign-ups", v: String(regs.length), s: `${duo} team · ${individual} solo` },
+          { l: "Pay method", v: `${online}/${cash}`, s: "online / cash" },
+          { l: "Expected", v: money(expected), s: `${paidN} marked paid` },
+          { l: "Collected", v: money(collected), s: `${money(expected - collected)} owed` },
+        ].map((c) => (
+          <div key={c.l} className="border border-line bg-carbon px-4 py-4">
+            <p className="eyebrow text-chalk-dim">{c.l}</p>
+            <p className="tnum mt-2 font-mono text-2xl font-bold text-chalk">{c.v}</p>
+            <p className="mt-1 text-xs text-chalk-dim">{c.s}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-sm text-chalk-dim">
+        Full money view across events:{" "}
+        <Link href="/admin/money" className="text-cq-bright hover:text-chalk">Admin → Money</Link>
+      </p>
+
       <section>
         <p className="eyebrow baseline mb-5 pb-3 text-chalk-dim">
           Waiting for approval <span className="tnum ml-1 bg-cq px-1.5 font-mono text-[10px] text-chalk">{pending.length}</span>

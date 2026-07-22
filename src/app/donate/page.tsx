@@ -1,54 +1,21 @@
-import type { Metadata } from "next";
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import { Reveal, SectionHead } from "@/components/ui";
+import { ZeffyEmbed } from "@/components/zeffy/ZeffyEmbed";
+import { ZEFFY } from "@/lib/zeffy";
+import { supabase } from "@/lib/supabase";
 import trophies2 from "@/photos/trophies-2.jpg";
 import community from "@/photos/community.jpg";
 
-export const metadata: Metadata = {
-  title: "Donate",
-  description:
-    "Support CourtQuest, a student-led 501(c)(3). Every dollar funds community pickleball tournaments and the local causes they support.",
-};
-
-/* Swap these for live campaign links (Zeffy supports one-time AND recurring
-   for free). Until then they open an email to the team. */
-const DONATE_URL = "mailto:hello@courtquest.org?subject=Donation%20to%20CourtQuest";
-const MONTHLY_URLS = {
-  rally: "mailto:hello@courtquest.org?subject=Monthly%20giving%20($5%20Rally%20Supporter)",
-  court: "mailto:hello@courtquest.org?subject=Monthly%20giving%20($15%20Court%20Sponsor)",
-  championship: "mailto:hello@courtquest.org?subject=Monthly%20giving%20($40%20Championship%20Backer)",
-};
-
-/* Monthly tiers: each one maps to a real tournament cost. */
-const TIERS = [
-  {
-    price: "$5",
-    name: "Rally Supporter",
-    funds: "Keeps the ball bin stocked",
-    body: "Tournament pickleballs crack and wear out fast. This keeps fresh balls on every court, every event.",
-    href: MONTHLY_URLS.rally,
-  },
-  {
-    price: "$15",
-    name: "Court Sponsor",
-    funds: "Covers an hour of court time",
-    body: "Indoor courts are our biggest expense. An hour a month adds up to whole qualification rounds.",
-    href: MONTHLY_URLS.court,
-    featured: true,
-  },
-  {
-    price: "$40",
-    name: "Championship Backer",
-    funds: "Trophies + a sponsored team",
-    body: "Funds the podium hardware each event and covers entry for a player who couldn't otherwise join.",
-    href: MONTHLY_URLS.championship,
-  },
-];
+const field =
+  "w-full border border-line bg-court px-4 py-3 text-sm text-chalk placeholder:text-chalk-dim/40 focus:border-cq/70 focus:outline-none";
 
 const FAQ = [
   {
     q: "Is my donation tax-deductible?",
-    a: "Yes. CourtQuest is a registered 501(c)(3) nonprofit, so donations are tax-deductible to the extent allowed by law.",
+    a: "Yes. CourtQuest is a registered 501(c)(3) nonprofit, so donations are tax-deductible to the extent allowed by law. Zeffy can email your receipt.",
   },
   {
     q: "Where does the money go?",
@@ -61,11 +28,34 @@ const FAQ = [
 ];
 
 export default function DonatePage() {
+  const [anonymous, setAnonymous] = useState(false);
+  const [name, setName] = useState("");
+  const [message, setMessage] = useState("");
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [showPay, setShowPay] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function saveNoteAndPay(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc("submit_donation_note", {
+        donor_name_in: anonymous ? null : name.trim() || null,
+        message_in: message.trim() || null,
+        anonymous_in: anonymous,
+      });
+      if (!error) setNoteSaved(true);
+    } finally {
+      setBusy(false);
+      setShowPay(true);
+    }
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 pb-24 pt-28 sm:px-6 sm:pt-36">
       <SectionHead eyebrow="Donate" title="Fuel the next rally" />
 
-      <div className="grid gap-14 lg:grid-cols-[1.1fr_1fr]">
+      <div className="grid gap-14 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <Reveal>
             <p className="max-w-xl text-lg leading-relaxed text-chalk sm:text-xl">
@@ -82,7 +72,7 @@ export default function DonatePage() {
               {[
                 { v: "$3,000+", l: "Raised to date" },
                 { v: "100%", l: "Goes to the mission" },
-                { v: "0", l: "Salaries paid" },
+                { v: "0", l: "Fees to Zeffy" },
               ].map((s) => (
                 <div key={s.l}>
                   <p className="tnum font-mono text-2xl font-bold text-chalk sm:text-3xl">{s.v}</p>
@@ -92,61 +82,85 @@ export default function DonatePage() {
             </div>
           </Reveal>
 
-          <Reveal delay={0.12}>
-            <a
-              href={DONATE_URL}
-              className="mt-10 inline-flex items-center justify-center bg-cq px-8 py-4 text-sm font-bold uppercase tracking-wide text-chalk transition-all hover:bg-cq-bright hover:-translate-y-0.5 shadow-[0_8px_24px_-8px_rgba(226,32,40,0.55)]"
-            >
-              Give once
-            </a>
-            <p className="eyebrow mt-4 text-chalk-dim/70">
-              Prefer sponsoring? Email us. We love local partners.
-            </p>
-          </Reveal>
+          {!showPay ? (
+            <Reveal delay={0.1}>
+              <form onSubmit={saveNoteAndPay} className="mt-12 space-y-4 border border-line bg-carbon p-6 sm:p-8">
+                <p className="eyebrow text-cq-bright">Leave a note (optional)</p>
+                <h2 className="display text-3xl text-chalk">Then give on Zeffy</h2>
+                <p className="text-sm text-chalk-dim">
+                  Add a message for the team, or stay anonymous. Checkout opens
+                  on this page with a backup link if the form doesn&apos;t load.
+                </p>
 
-          {/* Monthly giving tiers */}
-          <Reveal delay={0.1}>
-            <div className="baseline mt-16 pb-3 text-chalk">
-              <p className="eyebrow flex items-center gap-2.5 text-cq-bright">
-                <span className="kitchen-tick -translate-y-[2px]" aria-hidden />
-                Give monthly
-              </p>
-              <h2 className="display mt-3 text-3xl">Join the rotation</h2>
-            </div>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-chalk-dim">
-              Monthly supporters are how we book courts before a single entry fee
-              comes in. Every tier funds something specific.
-            </p>
-          </Reveal>
+                <label className="flex cursor-pointer items-center gap-3 text-sm text-chalk">
+                  <input
+                    type="checkbox"
+                    checked={anonymous}
+                    onChange={(e) => setAnonymous(e.target.checked)}
+                    className="h-4 w-4 accent-[#e22028]"
+                  />
+                  Stay anonymous
+                </label>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {TIERS.map((t, i) => (
-              <Reveal key={t.name} delay={i * 0.07}>
-                <div
-                  className={`flex h-full flex-col border p-5 ${
-                    t.featured ? "border-cq bg-cq/[0.06]" : "border-line bg-carbon"
-                  }`}
-                >
-                  <p className="tnum font-mono text-3xl font-bold text-chalk">
-                    {t.price}<span className="text-sm font-medium text-chalk-dim">/mo</span>
-                  </p>
-                  <p className="eyebrow mt-2 text-cq-bright">{t.name}</p>
-                  <p className="mt-3 text-sm font-bold uppercase tracking-wide text-chalk">{t.funds}</p>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-chalk-dim">{t.body}</p>
-                  <a
-                    href={t.href}
-                    className={`mt-5 block py-3 text-center text-xs font-bold uppercase tracking-wide transition-all ${
-                      t.featured
-                        ? "bg-cq text-chalk hover:bg-cq-bright"
-                        : "border border-line text-chalk hover:border-chalk/50"
-                    }`}
-                  >
-                    Give monthly
-                  </a>
+                {!anonymous && (
+                  <div>
+                    <label htmlFor="donor-name" className="eyebrow mb-2 block text-chalk-dim">Your name</label>
+                    <input
+                      id="donor-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Optional"
+                      className={field}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="donor-msg" className="eyebrow mb-2 block text-chalk-dim">Message</label>
+                  <textarea
+                    id="donor-msg"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    rows={3}
+                    placeholder="Encouragement, dedication, or why you give…"
+                    className={`${field} resize-y`}
+                  />
                 </div>
-              </Reveal>
-            ))}
-          </div>
+
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full bg-cq px-6 py-4 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright disabled:opacity-60"
+                >
+                  {busy ? "One sec…" : "Continue to donate"}
+                </button>
+                <p className="text-center text-xs text-chalk-dim/70">
+                  Or{" "}
+                  <a href={ZEFFY.donate} target="_blank" rel="noopener noreferrer" className="text-cq-bright hover:text-chalk">
+                    open the donation form in a new tab
+                  </a>
+                </p>
+              </form>
+            </Reveal>
+          ) : (
+            <Reveal>
+              <div className="mt-12 space-y-4">
+                {noteSaved && (message || (!anonymous && name)) && (
+                  <p className="border border-win/30 bg-win/10 px-4 py-3 text-sm text-chalk">
+                    Note saved{anonymous ? " (anonymous)" : name ? ` from ${name}` : ""}. Complete your gift below.
+                  </p>
+                )}
+                <ZeffyEmbed url={ZEFFY.donate} title="CourtQuest donation" height={680} />
+                <button
+                  type="button"
+                  onClick={() => setShowPay(false)}
+                  className="eyebrow text-chalk-dim hover:text-chalk"
+                >
+                  ← Edit note
+                </button>
+              </div>
+            </Reveal>
+          )}
 
           <div className="mt-14 space-y-6">
             {FAQ.map((f, i) => (

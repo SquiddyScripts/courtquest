@@ -78,6 +78,9 @@ export interface Match {
   created_at: string;
 }
 
+export type PaymentMethod = "cash" | "online" | "unpaid";
+export type RegistrationKind = "individual" | "duo";
+
 export interface Registration {
   id: string;
   tournament_id: string | null;
@@ -88,6 +91,28 @@ export interface Registration {
   phone: string | null;
   volunteer: boolean;
   processed: boolean;
+  created_at: string;
+  /** How they plan to / did pay the entry fee. */
+  payment_method?: PaymentMethod;
+  /** Confirmed paid (online self-confirm, cash at check-in, or admin). */
+  paid?: boolean;
+  paid_at?: string | null;
+  registration_type?: RegistrationKind;
+  preferred_partner?: string | null;
+  /** Expected entry fee in cents (30_00 / 60_00). */
+  fee_cents?: number;
+  donation_message?: string | null;
+  donation_anonymous?: boolean;
+}
+
+/** Optional note left on the donate page before opening Zeffy. */
+export interface DonationNote {
+  id: string;
+  donor_name: string | null;
+  message: string | null;
+  anonymous: boolean;
+  amount_cents: number | null;
+  source: string;
   created_at: string;
 }
 

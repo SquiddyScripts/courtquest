@@ -6,6 +6,7 @@ import { use, useEffect, useState } from "react";
 import { ArrowLeft, BadgeCheck, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { eventMedia } from "@/lib/eventMedia";
+import { feeLabel } from "@/lib/zeffy";
 import { RegisterForm, type RegistrationResult } from "@/components/tournament/RegisterForm";
 import { LiveDot } from "@/components/ui";
 import type { Tournament } from "@/lib/types";
@@ -49,10 +50,9 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
     : "Date to be announced";
 
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      {/* Left: the pitch, over event photography (hidden on small screens) */}
+    <main className="grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
       <aside className="relative hidden overflow-hidden lg:block">
-        <Image src={media.cover} alt={media.coverAlt} fill priority placeholder="blur" className="object-cover" sizes="50vw" />
+        <Image src={media.cover} alt={media.coverAlt} fill priority placeholder="blur" className="object-cover" sizes="45vw" />
         <div className="absolute inset-0 bg-gradient-to-t from-court via-court/70 to-court/40" aria-hidden />
         <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-14">
           <Link href={`/tournaments/${slug}`} className="eyebrow inline-flex items-center gap-2 text-chalk-dim transition-colors hover:text-chalk">
@@ -63,7 +63,7 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
               <BadgeCheck className="h-4 w-4 text-cq-bright" aria-hidden />
               <span className="eyebrow text-chalk">501(c)(3) Certified Nonprofit</span>
             </span>
-            <h1 className="display mt-6 text-6xl text-chalk xl:text-7xl">{tournament.name}</h1>
+            <h1 className="display mt-6 text-5xl text-chalk xl:text-6xl">{tournament.name}</h1>
             <p className="eyebrow mt-4 text-cq-bright">
               {fmtDate}{tournament.location ? ` · ${tournament.location}` : ""}
             </p>
@@ -79,17 +79,21 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
               </div>
               <div>
                 <p className="eyebrow text-chalk-dim">Entry</p>
-                <p className="mt-1 font-bold uppercase tracking-wide text-chalk">Cash at check-in</p>
+                <p className="mt-1 font-bold uppercase tracking-wide text-chalk">
+                  {feeLabel("individual")} / {feeLabel("duo")}
+                </p>
+              </div>
+              <div>
+                <p className="eyebrow text-chalk-dim">Pay</p>
+                <p className="mt-1 font-bold uppercase tracking-wide text-chalk">Online or cash</p>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Right: the form */}
-      <div className="flex flex-col justify-center px-4 py-24 sm:px-8 lg:px-14 xl:px-20">
-        <div className="mx-auto w-full max-w-lg">
-          {/* mobile-only header */}
+      <div className="flex flex-col justify-center px-4 py-24 sm:px-8 lg:px-12 xl:px-16">
+        <div className="mx-auto w-full max-w-xl">
           <div className="mb-8 lg:hidden">
             <Link href={`/tournaments/${slug}`} className="eyebrow inline-flex items-center gap-2 text-chalk-dim transition-colors hover:text-chalk">
               <ArrowLeft className="h-4 w-4" /> Back
@@ -103,13 +107,13 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
               <CheckCircle2 className="mx-auto h-10 w-10 text-win" aria-hidden />
               <h2 className="display mt-5 text-3xl text-chalk">You&apos;re on the list</h2>
               <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-chalk-dim">
-                We&apos;ll email you the details before {tournament.name}. Bring your
-                cash entry fee to check-in on tournament day.
+                {done.paymentMethod === "cash"
+                  ? `You're registered. Bring ${feeLabel(done.kind)} cash to check-in on tournament day.`
+                  : `You're registered${done.paymentMethod === "online" ? " and marked for online payment" : ""}. We'll email details before ${tournament.name}.`}
               </p>
               {done.profile === "created" && (
                 <p className="mx-auto mt-3 max-w-sm border border-line bg-carbon px-4 py-3 text-sm text-chalk">
-                  Your player profile is ready and you&apos;re signed in. Your matches
-                  and stats will track automatically.
+                  Your player profile is ready and you&apos;re signed in.
                 </p>
               )}
               <div className="mt-7 flex flex-wrap justify-center gap-3">
@@ -123,7 +127,7 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
                   </Link>
                 )}
                 <button onClick={() => setDone(null)} className="eyebrow border border-line px-4 py-3 text-chalk-dim hover:text-chalk">
-                  Register another team
+                  Register another
                 </button>
               </div>
             </div>
@@ -133,8 +137,8 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
               <h2 className="display mb-2 text-4xl text-chalk">Claim your spot</h2>
               <p className="mb-8 text-sm text-chalk-dim">
                 {tournament.format === "doubles"
-                  ? "Sign up your doubles team. We'll collect both players' emails so nobody misses an update."
-                  : "Sign up to play. Takes about a minute."}
+                  ? "Team ($60) or solo ($30). Pay online now or bring cash day-of."
+                  : "Sign up, then pay online or bring cash to check-in."}
               </p>
               <RegisterForm tournament={tournament} onDone={setDone} />
             </>
