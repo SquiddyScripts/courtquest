@@ -66,7 +66,7 @@ export function ZeffyEmbed({
               rel="noopener noreferrer"
               className="bg-cq px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright"
             >
-              Continue on Zeffy
+              Open checkout
             </a>
           </div>
         )}
@@ -74,7 +74,7 @@ export function ZeffyEmbed({
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
         <p className="text-xs text-chalk-dim/70">
-          Secure checkout on Zeffy · 100% of the fee goes to CourtQuest
+          Secure checkout · 100% goes to CourtQuest
         </p>
         {onPaid && (
           <button

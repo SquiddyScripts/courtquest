@@ -15,7 +15,7 @@ const field =
 const FAQ = [
   {
     q: "Is my donation tax-deductible?",
-    a: "Yes. CourtQuest is a registered 501(c)(3) nonprofit, so donations are tax-deductible to the extent allowed by law. Zeffy can email your receipt.",
+    a: "Yes. CourtQuest is a registered 501(c)(3) nonprofit, so donations are tax-deductible to the extent allowed by law. You'll get a tax receipt by email after you give.",
   },
   {
     q: "Where does the money go?",
@@ -28,14 +28,15 @@ const FAQ = [
 ];
 
 export default function DonatePage() {
+  const [showPay, setShowPay] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [anonymous, setAnonymous] = useState(false);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
-  const [showPay, setShowPay] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  async function saveNoteAndPay(e: React.FormEvent) {
+  async function saveNote(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
@@ -47,8 +48,15 @@ export default function DonatePage() {
       if (!error) setNoteSaved(true);
     } finally {
       setBusy(false);
-      setShowPay(true);
     }
+  }
+
+  function startDonate() {
+    setShowPay(true);
+    // Scroll checkout into view after paint
+    queueMicrotask(() => {
+      document.getElementById("donate-checkout")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   return (
@@ -72,7 +80,7 @@ export default function DonatePage() {
               {[
                 { v: "$3,000+", l: "Raised to date" },
                 { v: "100%", l: "Goes to the mission" },
-                { v: "0", l: "Fees to Zeffy" },
+                { v: "0", l: "Platform fees" },
               ].map((s) => (
                 <div key={s.l}>
                   <p className="tnum font-mono text-2xl font-bold text-chalk sm:text-3xl">{s.v}</p>
@@ -84,80 +92,108 @@ export default function DonatePage() {
 
           {!showPay ? (
             <Reveal delay={0.1}>
-              <form onSubmit={saveNoteAndPay} className="mt-12 space-y-4 border border-line bg-carbon p-6 sm:p-8">
-                <p className="eyebrow text-cq-bright">Leave a note (optional)</p>
-                <h2 className="display text-3xl text-chalk">Then give on Zeffy</h2>
-                <p className="text-sm text-chalk-dim">
-                  Add a message for the team, or stay anonymous. Checkout opens
-                  on this page with a backup link if the form doesn&apos;t load.
-                </p>
-
-                <label className="flex cursor-pointer items-center gap-3 text-sm text-chalk">
-                  <input
-                    type="checkbox"
-                    checked={anonymous}
-                    onChange={(e) => setAnonymous(e.target.checked)}
-                    className="h-4 w-4 accent-[#e22028]"
-                  />
-                  Stay anonymous
-                </label>
-
-                {!anonymous && (
-                  <div>
-                    <label htmlFor="donor-name" className="eyebrow mb-2 block text-chalk-dim">Your name</label>
-                    <input
-                      id="donor-name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Optional"
-                      className={field}
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label htmlFor="donor-msg" className="eyebrow mb-2 block text-chalk-dim">Message</label>
-                  <textarea
-                    id="donor-msg"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={3}
-                    placeholder="Encouragement, dedication, or why you give…"
-                    className={`${field} resize-y`}
-                  />
-                </div>
-
+              <div className="mt-12">
                 <button
-                  type="submit"
-                  disabled={busy}
-                  className="w-full bg-cq px-6 py-4 text-sm font-bold uppercase tracking-wide text-chalk hover:bg-cq-bright disabled:opacity-60"
+                  type="button"
+                  onClick={startDonate}
+                  className="inline-flex w-full items-center justify-center bg-cq px-8 py-4 text-sm font-bold uppercase tracking-wide text-chalk shadow-[0_8px_24px_-8px_rgba(226,32,40,0.55)] transition-all hover:bg-cq-bright hover:-translate-y-0.5 sm:w-auto sm:min-w-[220px]"
                 >
-                  {busy ? "One sec…" : "Continue to donate"}
+                  Donate
                 </button>
-                <p className="text-center text-xs text-chalk-dim/70">
-                  Or{" "}
-                  <a href={ZEFFY.donate} target="_blank" rel="noopener noreferrer" className="text-cq-bright hover:text-chalk">
-                    open the donation form in a new tab
-                  </a>
+                <p className="eyebrow mt-4 text-chalk-dim/70">
+                  Secure checkout · tax receipt emailed to you
                 </p>
-              </form>
+
+                {/* Optional note — clearly secondary, never blocks Donate */}
+                <div className="mt-10 border-t border-line pt-6">
+                  {!noteOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => setNoteOpen(true)}
+                      className="eyebrow text-chalk-dim hover:text-chalk"
+                    >
+                      Optional: leave a note for the team →
+                    </button>
+                  ) : (
+                    <form onSubmit={saveNote} className="max-w-md space-y-3">
+                      <p className="eyebrow text-chalk-dim">Optional note</p>
+                      <p className="text-sm text-chalk-dim">
+                        Totally optional — skip this and hit Donate above anytime.
+                      </p>
+
+                      <label className="flex cursor-pointer items-center gap-3 text-sm text-chalk-dim">
+                        <input
+                          type="checkbox"
+                          checked={anonymous}
+                          onChange={(e) => setAnonymous(e.target.checked)}
+                          className="h-4 w-4 accent-[#e22028]"
+                        />
+                        Stay anonymous
+                      </label>
+
+                      {!anonymous && (
+                        <input
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Your name (optional)"
+                          className={field}
+                          aria-label="Your name"
+                        />
+                      )}
+
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        rows={2}
+                        placeholder="Message (optional)"
+                        className={`${field} resize-y`}
+                        aria-label="Message"
+                      />
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <button
+                          type="submit"
+                          disabled={busy || noteSaved}
+                          className="eyebrow border border-line px-4 py-2.5 text-chalk-dim hover:text-chalk disabled:opacity-50"
+                        >
+                          {noteSaved ? "Note saved" : busy ? "Saving…" : "Save note"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNoteOpen(false)}
+                          className="eyebrow text-chalk-dim/60 hover:text-chalk"
+                        >
+                          Hide
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
             </Reveal>
           ) : (
             <Reveal>
-              <div className="mt-12 space-y-4">
+              <div id="donate-checkout" className="mt-12 space-y-4 scroll-mt-28">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="eyebrow text-cq-bright">Donate</p>
+                    <h2 className="display mt-1 text-3xl text-chalk">Choose an amount</h2>
+                  </div>
+                  <a
+                    href={ZEFFY.donate}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="eyebrow text-chalk-dim hover:text-chalk"
+                  >
+                    Open in new tab →
+                  </a>
+                </div>
                 {noteSaved && (message || (!anonymous && name)) && (
-                  <p className="border border-win/30 bg-win/10 px-4 py-3 text-sm text-chalk">
-                    Note saved{anonymous ? " (anonymous)" : name ? ` from ${name}` : ""}. Complete your gift below.
+                  <p className="text-sm text-chalk-dim">
+                    Note saved{anonymous ? " (anonymous)" : name ? ` from ${name}` : ""}.
                   </p>
                 )}
-                <ZeffyEmbed url={ZEFFY.donate} title="CourtQuest donation" height={680} />
-                <button
-                  type="button"
-                  onClick={() => setShowPay(false)}
-                  className="eyebrow text-chalk-dim hover:text-chalk"
-                >
-                  ← Edit note
-                </button>
+                <ZeffyEmbed url={ZEFFY.donate} title="Donate to CourtQuest" height={680} />
               </div>
             </Reveal>
           )}
