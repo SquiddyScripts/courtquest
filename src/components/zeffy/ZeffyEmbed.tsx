@@ -95,12 +95,14 @@ export function ZeffyModal({
   url,
   title,
   onClose,
-  onPaid,
+  doneLabel = "Done",
+  footnote,
 }: {
   url: string;
   title: string;
   onClose: () => void;
-  onPaid?: () => void;
+  doneLabel?: string;
+  footnote?: string;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -130,7 +132,17 @@ export function ZeffyModal({
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <ZeffyEmbed url={url} title={title} height={640} onPaid={onPaid} paidLabel="Done — I'm paid" />
+          <ZeffyEmbed url={url} title={title} height={640} />
+        </div>
+        <div className="space-y-3 border-t border-line px-4 py-4">
+          {footnote && <p className="text-xs leading-relaxed text-chalk-dim">{footnote}</p>}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full border border-line px-4 py-3 text-sm font-bold uppercase tracking-wide text-chalk hover:border-chalk/40"
+          >
+            {doneLabel}
+          </button>
         </div>
       </div>
     </div>

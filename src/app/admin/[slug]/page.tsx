@@ -688,7 +688,7 @@ function RegistrationsTab({
                   email: r.email,
                   email2: r.email2,
                   registration_id: r.id,
-                  paid: !!r.paid || r.payment_method === "online",
+                  paid: !!r.paid,
                 });
                 await act("registration_update", { id: r.id, patch: { processed: true } });
                 setRegs((prev) => prev.map((x) => x.id === r.id ? { ...x, processed: true } : x));

@@ -122,18 +122,9 @@ export function RegisterForm({
     onDone(result);
   }
 
-  async function markOnlinePaid() {
-    if (pending?.registrationId) {
-      await supabase.rpc("confirm_registration_paid", {
-        reg_id: pending.registrationId,
-        email_in: null,
-      });
-    }
-    setZeffyOpen(false);
-    if (pending) onDone({ ...pending, paymentMethod: "online" });
-  }
-
-  function skipPayForNow() {
+  // Never trust a client "I paid" click — online stays unpaid until an admin
+  // confirms it (or cash at check-in). Closing the checkout just finishes sign-up.
+  function finishAfterCheckout() {
     setZeffyOpen(false);
     if (pending) onDone(pending);
   }
@@ -326,8 +317,9 @@ export function RegisterForm({
         <ZeffyModal
           url={zeffyUrl}
           title={`Pay ${fee} entry fee`}
-          onClose={skipPayForNow}
-          onPaid={markOnlinePaid}
+          onClose={finishAfterCheckout}
+          doneLabel="Done with checkout"
+          footnote="Complete payment above if you can. Closing does not mark you paid — we confirm payments from our side."
         />
       )}
     </>

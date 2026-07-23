@@ -109,7 +109,9 @@ export default function RegisterPage({ params }: { params: Promise<{ slug: strin
               <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-chalk-dim">
                 {done.paymentMethod === "cash"
                   ? `You're registered. Bring ${feeLabel(done.kind)} cash to check-in on tournament day.`
-                  : `You're registered${done.paymentMethod === "online" ? " and marked for online payment" : ""}. We'll email details before ${tournament.name}.`}
+                  : done.paymentMethod === "online"
+                    ? `You're on the list. If you paid online, we'll confirm it on our side — clicking around the form doesn't mark you paid. We'll email details before ${tournament.name}.`
+                    : `You're registered. We'll email details before ${tournament.name}.`}
               </p>
               {done.profile === "created" && (
                 <p className="mx-auto mt-3 max-w-sm border border-line bg-carbon px-4 py-3 text-sm text-chalk">
